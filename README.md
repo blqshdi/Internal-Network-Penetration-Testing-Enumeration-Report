@@ -1,206 +1,266 @@
-# 🛡️ Internal Network Penetration Testing & Enumeration Report
+# 🛡️ Metasploitable 2 – Network Reconnaissance & Enumeration Report
 
-## Target: 192.168.56.101 (Metasploitable 2)
-
----
-
-# 📌 1. Executive Summary
-
-This report documents the reconnaissance and enumeration phase performed against a vulnerable Linux system (Metasploitable 2) in a controlled lab environment.
-
-The objective was to identify exposed services, gather system information, and evaluate potential security weaknesses using standard penetration testing tools.
-
-The target was found to contain **multiple critical vulnerabilities**, including outdated services, insecure protocols, and misconfigured network services.
+## 📌 1. Objective
+This report documents the reconnaissance and enumeration phase performed against Metasploitable 2. The goal is to identify open ports, services, and potential vulnerabilities for exploitation.
 
 ---
 
-# 📌 2. Scope
-
-| Item | Details |
-|------|--------|
-| Target IP | 192.168.56.101 |
-| Environment | Virtual Internal Network |
-| Attacker | Kali Linux |
-| Target | Metasploitable 2 |
-| Phase | Reconnaissance & Enumeration |
+## 📌 2. Target Information
+- IP Address: 192.168.56.101
+- Environment: VirtualBox / Internal Network
+- OS (Expected): Linux (Metasploitable 2)
 
 ---
 
-# 📌 3. Methodology
+## 📌 3. Host Discovery
 
-The following techniques were used:
-
-- Host discovery (ICMP ping)
-- Network scanning (Nmap)
-- Service version detection
-- OS fingerprinting
-- SMB / NetBIOS enumeration
-- RPC & NFS enumeration
-- SMTP & FTP banner grabbing
-- DNS analysis (external)
-- SNMP probing
-
----
-
-# 📌 4. Host Discovery
-
-## Command:
+### Command:
 ```bash
 ping 192.168.56.101
-Result:
-Host is alive
-TTL ≈ 64 (Linux system)
-Observation:
+```
 
-The TTL value confirms a Linux-based operating system.
+### Result:
+- Host is alive
+- TTL ≈ 64 → Linux system
 
-📌 5. Port Scanning
-Command:
+---
+
+## 📌 4. Port Scanning
+
+### Command:
+```bash
 nmap -F 192.168.56.101
-Open Ports:
-Port	Service
-21	FTP
-22	SSH
-23	Telnet
-25	SMTP
-80	HTTP
-139	SMB
-445	SMB
-2049	NFS
-3306	MySQL
-5900	VNC
-📌 6. Service Version Detection
-Command:
+```
+
+### Open Ports:
+- 21 FTP
+- 22 SSH
+- 23 Telnet
+- 25 SMTP
+- 80 HTTP
+- 139 SMB
+- 445 SMB
+- 2049 NFS
+- 3306 MySQL
+- 5900 VNC
+
+---
+
+## 📌 5. Service Version Detection
+
+### Command:
+```bash
 nmap -sV 192.168.56.101
-Key Findings:
-Service	Version	Risk
-FTP	vsftpd 2.3.4	Backdoor vulnerability
-Apache	2.2.8	Outdated
-Samba	3.0.20	Null session allowed
-MySQL	5.0	Weak configuration
-UnrealIRCd	IRC daemon	RCE risk
-📌 7. OS Detection
-Command:
+```
+
+### Findings:
+- FTP: vsftpd 2.3.4 (backdoor vulnerability)
+- Apache: 2.2.8 (outdated)
+- Samba: 3.0.20 (null session allowed)
+- MySQL: 5.0 (weak configuration)
+- UnrealIRCd: RCE risk
+
+---
+
+## 📌 6. OS Detection
+
+### Command:
+```bash
 nmap -O 192.168.56.101
-Result:
-Linux Kernel 2.6.x
-Metasploitable 2 confirmed
-📌 8. NetBIOS Enumeration
-Command:
+```
+
+### Result:
+- Linux Kernel 2.6.x
+- Metasploitable 2 confirmed
+
+---
+
+## 📌 7. NetBIOS Enumeration
+
+### Command:
+```bash
 nbtscan 192.168.56.101
-Result:
-Hostname: METASPLOITABLE
-Workgroup: WORKGROUP
-📌 9. SMB Enumeration
-Command:
+```
+
+### Result:
+- Hostname: METASPLOITABLE
+- Workgroup: WORKGROUP
+
+---
+
+## 📌 8. SMB Enumeration
+
+### Command:
+```bash
 enum4linux -a 192.168.56.101
-Findings:
-👤 Users:
-root
-msfadmin
-postgres
-nobody
-ftp
-sshd
-mysql
-📂 Shares:
-tmp
-opt
-print$
-IPC$
-⚠️ Security Issues:
-Null session enabled
-Anonymous enumeration allowed
-📌 10. SMB OS Discovery
-Command:
+```
+
+### Users Found:
+- root
+- msfadmin
+- postgres
+- nobody
+- ftp
+- sshd
+- mysql
+
+### Shares:
+- tmp
+- opt
+- print$
+- IPC$
+
+### Issues:
+- Null session enabled
+- Anonymous access allowed
+
+---
+
+## 📌 9. SMB OS Discovery
+
+### Command:
+```bash
 nmap --script smb-os-discovery -p445 192.168.56.101
-Result:
-OS: Unix (Samba 3.0.20-Debian)
-Domain: WORKGROUP
-📌 11. NFS Enumeration
-Command:
+```
+
+### Result:
+- OS: Unix (Samba 3.0.20-Debian)
+- Domain: WORKGROUP
+
+---
+
+## 📌 10. NFS Enumeration
+
+### Command:
+```bash
 showmount -e 192.168.56.101
-Result:
+```
+
+### Result:
+```
 / *
-Risk:
+```
 
-Entire filesystem exported to network (critical misconfiguration)
+### Risk:
+- Entire filesystem exported (critical misconfiguration)
 
-📌 12. RPC Enumeration
-Command:
+---
+
+## 📌 11. RPC Enumeration
+
+### Command:
+```bash
 rpcinfo -p 192.168.56.101
-Result:
-mountd active
-nlockmgr active
-NFS services exposed
-📌 13. FTP Enumeration
-Command:
+```
+
+### Result:
+- mountd active
+- nlockmgr active
+- NFS exposed
+
+---
+
+## 📌 12. FTP Enumeration
+
+### Command:
+```bash
 nc 192.168.56.101 21
-Result:
-220 (vsFTPd 2.3.4)
-Risk:
+```
 
-Known vulnerable FTP version with backdoor vulnerability.
+### Result:
+- 220 vsFTPd 2.3.4
 
-📌 14. SMTP Enumeration
-Command:
+### Risk:
+- Known backdoor vulnerability
+
+---
+
+## 📌 13. SMTP Enumeration
+
+### Command:
+```bash
 nmap -p25 --script smtp-commands 192.168.56.101
-Findings:
-VRFY enabled
-EXPN enabled
-User enumeration possible
-📌 15. SNMP Enumeration
-Command:
+```
+
+### Findings:
+- VRFY enabled
+- EXPN enabled
+- User enumeration possible
+
+---
+
+## 📌 14. SNMP Enumeration
+
+### Command:
+```bash
 snmpwalk -v2c -c public 192.168.56.101
-Result:
-No response received
-Conclusion:
+```
 
-SNMP service is not active or filtered.
+### Result:
+- No response (inactive/filtered)
 
-📌 16. DNS Enumeration (External)
-Commands:
+---
+
+## 📌 15. DNS Enumeration (External)
+
+### Commands:
+```bash
 nslookup google.com
 dig google.com ANY
 dig google.com MX
-Findings:
-DNS Records:
-A record: 172.217.27.14
-AAAA record: IPv6 address available
-MX record: smtp.google.com
-NS records: Google name servers
-TXT records: SPF and verification
-CAA record: pki.goog
-📊 17. Correlation Table
-Source	Finding	Risk
-SMB	User list exposed	Credential leakage
-SMB	Writable share (tmp)	File manipulation
-NFS	Root filesystem exported	Full access risk
-FTP	vsftpd 2.3.4	Known backdoor
-SMTP	VRFY enabled	User enumeration
-RPC	Service mapping exposed	Recon information leak
-⚠️ 18. Security Findings Summary
-Multiple outdated services detected
-Insecure protocols (Telnet, FTP, rsh)
-Anonymous SMB access enabled
-NFS misconfiguration exposes full filesystem
-Weak service hardening across system
-📌 19. Conclusion
+```
 
-The target system (Metasploitable 2) contains multiple critical vulnerabilities due to outdated software and insecure configurations.
+### Findings:
+- A: 172.217.27.14
+- AAAA: IPv6 enabled
+- MX: smtp.google.com
+- NS: Google name servers
+- TXT: SPF + verification records
+- CAA: pki.goog
 
-The attack surface includes:
+---
 
-Remote code execution potential
-Credential enumeration risks
-Full filesystem exposure via NFS
-Legacy service exploitation opportunities
-🧰 20. Tools Used
-Nmap
-enum4linux
-nbtscan
-rpcinfo
-netcat (nc)
-snmpwalk
-dig / nslookup
-showmount
+## 📊 16. Risk Correlation
+
+| Source | Finding | Risk |
+|--------|--------|------|
+| SMB | User enumeration | High |
+| SMB | Writable shares | High |
+| NFS | Full filesystem export | Critical |
+| FTP | vsFTPd 2.3.4 | Critical |
+| SMTP | VRFY enabled | Medium |
+| RPC | Service exposure | Medium |
+
+---
+
+## ⚠️ 17. Security Summary
+
+- Multiple outdated services
+- Insecure legacy protocols (FTP, Telnet)
+- SMB anonymous access enabled
+- Critical NFS misconfiguration
+- User enumeration possible
+
+---
+
+## 🎯 18. Conclusion
+
+Metasploitable 2 is highly vulnerable due to misconfigurations and outdated services. The system presents multiple attack vectors including remote exploitation, credential enumeration, and full filesystem access.
+
+---
+
+## 🧰 19. Tools Used
+- Nmap
+- enum4linux
+- nbtscan
+- rpcinfo
+- netcat
+- snmpwalk
+- dig / nslookup
+- showmount
+
+---
+
+## 👤 Author
+- Pentester: Your Name
+- Date: 2026
