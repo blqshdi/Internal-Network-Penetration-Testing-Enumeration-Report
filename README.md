@@ -260,7 +260,3 @@ Metasploitable 2 is highly vulnerable due to misconfigurations and outdated serv
 - showmount
 
 ---
-
-## 👤 Author
-- Pentester: Your Name
-- Date: 2026
